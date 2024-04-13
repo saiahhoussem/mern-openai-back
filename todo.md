@@ -1,0 +1,2 @@
+- impelement auth with JWT
+- implement middleware (REFRESH+SESSION TOKEN)
