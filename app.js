@@ -1,10 +1,16 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const chatRoutes = require('./routes/chatRoutes.js');
 
 require('dotenv').config();
+
+app.use(cors({
+    origin: ["http://localhost:3000"],
+    credentials: true
+}));
 
 connectDB();
 

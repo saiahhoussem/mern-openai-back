@@ -9,10 +9,11 @@ const openai = new OpenAI({
 // Define a function to handle chat completions
 const chatCompletion = async (req, res) => {
     try {
+      const chatOwner = req.query.chatOwner;
       const { messages } = req.body;
 
       // Get existing chats from the database where user is admin
-      const existingChats = await Chat.find({ chat_owner: 'admin' });
+      const existingChats = await Chat.find({ chat_owner: chatOwner });
       
       // Initialize an array to store existing chat content
       let existingChatContent = [];
@@ -55,11 +56,11 @@ const chatCompletion = async (req, res) => {
       const botResponse = response.choices[0].message.content;
       console.log(allMessages)
         // Find existing chat document where chat_owner is 'admin'
-        let existingChat = await Chat.findOne({ chat_owner: 'admin' });
+        let existingChat = await Chat.findOne({ chat_owner: chatOwner });
 
         if (!existingChat) {
             existingChat = new Chat({
-                chat_owner: 'admin',
+                chat_owner: chatOwner,
                 chat_content: []
             });
         
@@ -68,7 +69,7 @@ const chatCompletion = async (req, res) => {
         
             // Then, update it
             const addSystem = await Chat.updateOne(
-              { chat_owner: 'admin' },
+              { chat_owner: chatOwner },
               { $push: { 
                   chat_content: { 
                       $each: [
@@ -97,5 +98,37 @@ const chatCompletion = async (req, res) => {
       res.status(500).json({ error: "An error occurred while completing chat" });
     }
   };
+
+const getChats = async (req, res)=>{
+    try{
+    
+        const chats = await Chat.find();
+    res.status(200).json(chats);
+
+
+    } catch (error) {
+        console.error("Error completing chat:", error.message);
+        res.status(500).json({ error: "An error occurred while completing chat" });
+      }
+}
   
-module.exports = { chatCompletion };
+const getChatByUser = async (req, res) => {
+    try {
+      const user = req.query.user;
+  
+      // Retrieve the chat by ID from the database
+      const chat = await Chat.find({chat_owner: user});
+  
+      if (!chat) {
+        // If chat is not found, return 404 Not Found
+        return res.status(404).json({ error: "Chat not found" });
+      }
+  
+      // Return the chat as JSON response
+      res.status(200).json(chat);
+    } catch (error) {
+      console.error("Error fetching chat:", error.message);
+      res.status(500).json({ error: "An error occurred while fetching chat" });
+    }
+  };
+module.exports = { chatCompletion, getChats, getChatByUser };
